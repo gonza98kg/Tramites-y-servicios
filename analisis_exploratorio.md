@@ -1,10 +1,15 @@
-# Índice de Esfuerzo de Trámites y Servicios — Documentación de Metodología
+# Índice de Esfuerzo Ciudadano — Análisis Exploratorio: Correlación y PCA
 
 ## Contexto
 
-El presente análisis tiene como objetivo construir un **índice de esfuerzo** para los trámites y servicios gubernamentales del estado de Hidalgo, a partir de una base de datos de 666 trámites con variables que describen su complejidad desde la perspectiva del ciudadano. El índice busca capturar de forma cuantitativa qué tan difícil, costoso o tardado es completar un trámite.
+La primera aproximación al IEC (`combinacion-lineal-ponderada`) construyó un índice mediante combinación lineal ponderada con pesos asignados por criterio experto. Esa metodología identificó dos limitaciones críticas:
 
-Las variables seleccionadas para el modelo son:
+1. **Pesos subjetivos** — el analista decidió cuánto pesar cada variable sin sustento estadístico.
+2. **Datos sin tratar** — aproximadamente el 37% de los trámites quedaron excluidos del cálculo por valores nulos en al menos una variable, sin que se hubiera realizado un análisis exploratorio previo ni una estrategia de imputación.
+
+Este análisis responde directamente a esas limitaciones. El objetivo es doble: por un lado, **sanear la base de datos** mediante EDA formal e imputación; por otro, **explorar la estructura estadística** de las variables a través de PCA y la matriz de correlación, para determinar si existe información compartida entre ellas que pueda aprovecharse para construir pesos objetivos.
+
+Las variables del modelo son:
 
 | Variable | Descripción |
 |---|---|
@@ -173,11 +178,10 @@ Esta independencia tiene una implicación directa sobre la viabilidad del PCA co
 
 ---
 
-## 8. Líneas de Trabajo Futuras
+## 8. Metodologías Implementadas a partir de este Análisis
 
-Dado que el PCA no parece ser el enfoque más adecuado para este conjunto de datos, se proponen las siguientes alternativas:
+La confirmación de independencia estadística entre variables descartó el PCA como método de construcción del índice, y motivó el desarrollo de tres metodologías alternativas:
 
-- **Índice ponderado por eigenvalores:** construir un índice como combinación lineal de las variables originales, donde los pesos se derivan de los eigenvalores de $\mathbb{C}$, otorgando mayor peso a las variables que corresponden a las direcciones principales más informativas.
-- **Entropía de Boltzmann:** medir la concentración o dispersión de los trámites en cada dimensión como proxy de complejidad sistémica.
-- **Random Forest:** usar un modelo supervisado para identificar qué variables predicen mejor el uso real de los trámites (`visitas_totales` o `Visitas RUTS`) y derivar de ahí los pesos del índice.
-- **Optimización con Lagrangiano:** plantear un problema de minimización del esfuerzo ciudadano sujeto a restricciones de efectividad o costo, obteniendo pesos óptimos mediante multiplicadores de Lagrange.
+- **Ponderación por eigenvalores** (`eigenvalue-weighted-index`): los eigenvalores de $\mathbb{C}$ se normalizan como $w_i = \lambda_i / \sum \lambda_j$ para obtener pesos objetivos derivados de los datos. Implementado.
+- **Entropía de Shannon** (`entropia`): se mide la incertidumbre distribucional de cada variable como proxy de complejidad, asignando mayor peso a las variables más discriminantes. Implementado.
+- **Random Forest No Supervisado** (`RandomForest`): se entrena un RF para distinguir trámites reales de sintéticos, extrayendo una matriz de proximidad que permite agrupar trámites por similitud estructural y construir un IEC continuo. Implementado.
